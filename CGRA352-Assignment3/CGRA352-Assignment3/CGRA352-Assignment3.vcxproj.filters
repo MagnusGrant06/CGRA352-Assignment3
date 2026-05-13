@@ -18,5 +18,19 @@
     <ClCompile Include="CGRA352-Assignment3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lightfield.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="aperture.hpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="aperture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="lightfield.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
