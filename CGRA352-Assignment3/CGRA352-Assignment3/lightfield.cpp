@@ -74,3 +74,87 @@ cv::Mat LightField::reconstruct_raw_data(Aperture aperture, cv::Range row_range,
 	return raw_data;
 }
 
+cv::Mat LightField::reconstruct(Aperture aperture, float focal_distance) {
+
+	LFCam* center_cam = get_lf_cam(rows / 2, cols / 2);
+	cv::Vec2f center_uv = center_cam->uv;
+
+	int st_rows = center_cam->image.rows;
+	int st_cols = center_cam->image.cols;
+
+	cv::Mat result(st_rows, st_cols, CV_32FC3, cv::Scalar(0, 0, 0));
+	int count = 0;
+	for (LFCam& cam : lf_cams) {
+
+		if (!aperture.transparent(cam.uv)) continue;
+
+		cv::Vec2f uv = center_uv - cam.uv;
+		cv::Mat indices(st_rows, st_cols, CV_32FC2);
+
+		for (int t = 0; t < st_rows; t++) {
+			for (int s = 0; s < st_cols; s++) {
+
+				indices.at<cv::Vec2f>(t, s) = cv::Vec2f(s, t) + uv * focal_distance;
+
+			}
+		}
+
+
+		cv::Mat out;
+		cv::remap(cam.image, out, indices, cv::Mat(), cv::INTER_LINEAR);
+
+		result += out;
+		count++;
+	}
+
+	result /= count;
+
+	cv::Mat result_u8;
+	result.convertTo(result_u8, CV_8UC3);
+	return result_u8;
+}
+
+float LightField::calculate_focal_cost(cv::Rect rect, Aperture aperture, float focal_distance) {
+
+	LFCam* center_cam = get_lf_cam(rows / 2, cols / 2);
+	cv::Vec2f center_uv = center_cam->uv;
+
+	int st_rows = center_cam->image.rows;
+	int st_cols = center_cam->image.cols;
+
+	cv::Mat center_sample(rect.height, rect.width, CV_8UC3);
+	cv::Mat temp_sample(rect.height, rect.width, CV_8UC3);
+
+	center_sample = center_cam->image(rect);
+	 //copy portion of image to rect
+	//build up center sample
+	//build index
+
+	//remap(center_cam->image, center_sample, index)
+
+	float cost = 0;
+
+	for (LFCam& cam : lf_cams) {
+
+		if (!aperture.transparent(cam.uv)) continue;
+		cv::Mat img = cam.image;
+
+		cv::Vec2f uv = center_uv - cam.uv;
+		cv::Mat indices(center_sample.rows, center_sample.cols, CV_32FC2);
+
+		for (int t = 0; t < center_sample.rows; t++) {
+			for (int s = 0; s < center_sample.cols; s++) {
+
+				indices.at<cv::Vec2f>(t, s) = cv::Vec2f(rect.x + s, rect.y + t) + uv * focal_distance;
+
+			}
+		}
+		//build up index mapping of the current focal distance
+		//in the range of the rectangle
+		remap(img, temp_sample, indices,cv::Mat(), cv::INTER_LINEAR);
+		cost += cv::norm(center_sample, temp_sample);
+
+	}
+
+	return cost;
+}

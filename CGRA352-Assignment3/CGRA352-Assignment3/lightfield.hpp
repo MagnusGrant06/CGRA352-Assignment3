@@ -28,4 +28,8 @@ public:
 	}
 
 	cv::Mat reconstruct_raw_data(Aperture aperture, cv::Range row_range, cv::Range col_range);
+
+	cv::Mat reconstruct(Aperture aperture, float focal_distance);
+
+	float calculate_focal_cost(cv::Rect rect, Aperture aperture, float focal_distance);
 };
