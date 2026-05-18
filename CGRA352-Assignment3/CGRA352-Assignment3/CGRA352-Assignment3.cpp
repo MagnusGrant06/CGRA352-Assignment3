@@ -8,7 +8,7 @@
 struct onMouseUserData {
     LightField* lf;
     Aperture* ap;
-    cv::Mat out_image;
+    cv::Mat* out_image;
 };
 
 static void onMouse(int mouse_action, int x, int y, int flags, void* userdata) {
@@ -17,7 +17,7 @@ static void onMouse(int mouse_action, int x, int y, int flags, void* userdata) {
     userdata = (onMouseUserData*)userdata;
     LightField* lf = ((onMouseUserData*)userdata)->lf;
     Aperture* ap = ((onMouseUserData*)userdata)->ap;
-    cv::Mat& out_image = ((onMouseUserData*)userdata)->out_image;
+    cv::Mat& out_image = *((onMouseUserData*)userdata)->out_image;
 
     cv::Rect r(x-2, y-2, 5, 5);
     float min_cost = FLT_MAX;
@@ -29,11 +29,12 @@ static void onMouse(int mouse_action, int x, int y, int flags, void* userdata) {
             min_dist = f;
         }
     }
-
+    
     out_image = lf->reconstruct(*ap, min_dist);
    
     cv::circle(out_image, cv::Point(x, y), 7, cv::Scalar(0, 0, 255), 2);
     cv::imshow("focus", out_image);
+    cv::waitKey(1);
 }
 
 int main()
@@ -68,7 +69,7 @@ int main()
     onMouseUserData userdata;
     userdata.lf = &lf;
     userdata.ap = &ap40;
-    userdata.out_image = out_image;
+    userdata.out_image = &out_image;
     
     cv::namedWindow("focus", cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback("focus", onMouse, &userdata);

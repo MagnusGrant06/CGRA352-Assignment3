@@ -146,12 +146,14 @@ float LightField::calculate_focal_cost(cv::Rect rect, Aperture aperture, float f
 			for (int s = 0; s < center_sample.cols; s++) {
 
 				indices.at<cv::Vec2f>(t, s) = cv::Vec2f(rect.x + s, rect.y + t) + uv * focal_distance;
+				
 
 			}
 		}
 		//build up index mapping of the current focal distance
 		//in the range of the rectangle
-		remap(img, temp_sample, indices,cv::Mat(), cv::INTER_LINEAR);
+		cv::remap(img, temp_sample, indices,cv::Mat(), cv::INTER_LINEAR);
+		//std::cout << indices << std::endl;
 		cost += cv::norm(center_sample, temp_sample);
 
 	}
