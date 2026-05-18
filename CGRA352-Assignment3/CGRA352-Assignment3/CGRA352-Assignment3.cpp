@@ -11,6 +11,7 @@ struct onMouseUserData {
     cv::Mat* out_image;
 };
 
+//mouse interaction method to be called by cv::setMouseCallback
 static void onMouse(int mouse_action, int x, int y, int flags, void* userdata) {
     if (mouse_action != cv::EVENT_LBUTTONDOWN) return;
 
@@ -46,9 +47,11 @@ int main()
     Aperture ap40(cv::Vec2f( 533.057190 ,-776.880371), 40);
     Aperture ap75(cv::Vec2f(533.057190, -776.880371), 75);
 
-    cv::Mat raw_data = lf.reconstruct_raw_data(ap75, cv::Range(205,305), cv::Range(770,870));
+    cv::Mat raw_data75 = lf.reconstruct_raw_data(ap75, cv::Range(205,305), cv::Range(770,870));
+    cv::Mat raw_data40 = lf.reconstruct_raw_data(ap40, cv::Range(205, 305), cv::Range(770, 870));
 
-    cv::imshow("dsadsa", raw_data);
+    cv::imshow("Aperture of 75", raw_data75);
+    cv::imshow("Aperture of 40", raw_data40);
     cv::waitKey(0);
 
     //completion

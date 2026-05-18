@@ -49,6 +49,8 @@ LightField::LightField(std::string filepath, int rows, int cols) : lf_cams(rows*
 	std::cout << "Finished loading light field" << std::endl;
 }
 
+
+//reconstruct raw pixel data from each light field camera into a display image
 cv::Mat LightField::reconstruct_raw_data(Aperture aperture, cv::Range row_range, cv::Range col_range) {
 	int st_rows = row_range.size() * this->rows;
 	int st_cols = col_range.size() * this->cols;
@@ -62,7 +64,7 @@ cv::Mat LightField::reconstruct_raw_data(Aperture aperture, cv::Range row_range,
 				for (int u = 0; u < this->cols; u++) {
 
 					LFCam* current_cam = get_lf_cam(v, u);
-					if (!aperture.transparent(current_cam->uv)) continue;
+					if (!aperture.transparent(current_cam->uv)) continue; //skip if camera is not in aperture
 					raw_data.at<cv::Vec3b>(t * this->rows + v, s * this->cols + u) = current_cam->image.at<cv::Vec3b>(row_range.start+t, col_range.start + s);
 
 				}
@@ -74,6 +76,7 @@ cv::Mat LightField::reconstruct_raw_data(Aperture aperture, cv::Range row_range,
 	return raw_data;
 }
 
+//reconstruct image data into a focused image depending on the focal distance 
 cv::Mat LightField::reconstruct(Aperture aperture, float focal_distance) {
 
 	LFCam* center_cam = get_lf_cam(rows / 2, cols / 2);
@@ -100,6 +103,7 @@ cv::Mat LightField::reconstruct(Aperture aperture, float focal_distance) {
 		}
 
 
+		//remap the current camera image and add it onto the output image
 		cv::Mat out;
 		cv::remap(cam.image, out, indices, cv::Mat(), cv::INTER_LINEAR);
 
@@ -107,6 +111,7 @@ cv::Mat LightField::reconstruct(Aperture aperture, float focal_distance) {
 		count++;
 	}
 
+	//average result out and convert it to uint
 	result /= count;
 
 	cv::Mat result_u8;
@@ -114,6 +119,8 @@ cv::Mat LightField::reconstruct(Aperture aperture, float focal_distance) {
 	return result_u8;
 }
 
+
+//calculate the cost of a possible focal distance to determine the lowest cost for challenge 
 float LightField::calculate_focal_cost(cv::Rect rect, Aperture aperture, float focal_distance) {
 
 	LFCam* center_cam = get_lf_cam(rows / 2, cols / 2);
@@ -126,11 +133,6 @@ float LightField::calculate_focal_cost(cv::Rect rect, Aperture aperture, float f
 	cv::Mat temp_sample(rect.height, rect.width, CV_8UC3);
 
 	center_sample = center_cam->image(rect);
-	 //copy portion of image to rect
-	//build up center sample
-	//build index
-
-	//remap(center_cam->image, center_sample, index)
 
 	float cost = 0;
 
@@ -153,7 +155,6 @@ float LightField::calculate_focal_cost(cv::Rect rect, Aperture aperture, float f
 		//build up index mapping of the current focal distance
 		//in the range of the rectangle
 		cv::remap(img, temp_sample, indices,cv::Mat(), cv::INTER_LINEAR);
-		//std::cout << indices << std::endl;
 		cost += cv::norm(center_sample, temp_sample);
 
 	}
